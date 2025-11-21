@@ -108,15 +108,6 @@ docker compose --profile api up -d
 - **Missing packages:** Install `requirements.txt`. SHAP and Captum are optional (explainability). If SHAP/Caputm not installed, `explain_model.py` will skip relevant blocks.
 - **Permission errors in Docker:** When mounting volumes, ensure file permissions allow the container user to read/write `./models`.
 
-**License**
-- This repository includes a `LICENSE` file at the project root. Check it for usage/redistribution terms.
-
-**Contact / Next steps**
-- If you want, I can:
-  - Add example client scripts for querying the API.
-  - Add a small test to validate that model + stats files load before starting the API.
-  - Add a minimal `Makefile` with common commands (`make install`, `make train`, `make api`).
-
 **Training Results**
 - **Artifacts:**: See the `models/` folder for generated plots and artifacts. The most relevant plots are embedded below for quick review.
 
