@@ -1,17 +1,17 @@
 **Voltage Predictor**
 
-- **Project:**: Voltage time-series prediction and anomaly risk estimation
-- **Location:**: `./` (repo root)
-- **Primary scripts:**: `train_model.py`, `train_model_probability.py`, `predict_api.py`, `explain_model.py`
+- **Project**: Voltage time-series prediction and anomaly risk estimation
+- **Location**: `./` (repo root)
+- **Primary scripts**: `train_model.py`, `train_model_probability.py`, `predict_api.py`, `explain_model.py`
 
 **Overview**
-- **Description:**: This repository contains a small PyTorch-based project to predict a scalar "voltage" (or similar time-dependent metric) for given time features (hour, minute, weekday, month) and to estimate risk/anomalies via a probability model. It includes training scripts, an explainability script (SHAP / Integrated Gradients), and a FastAPI-based prediction API.
-- **Model files:**: stored under `models/` (pretrained weights and normalization stats).
+- **Description**: This repository contains a small PyTorch-based project to predict a scalar "voltage" (or similar time-dependent metric) for given time features (hour, minute, weekday, month) and to estimate risk/anomalies via a probability model. It includes training scripts, an explainability script (SHAP / Integrated Gradients), and a FastAPI-based prediction API.
+- **Model files**: stored under `models/` (pretrained weights and normalization stats).
 
 **Requirements**
-- **Python packages:**: see `requirements.txt`. At minimum the project expects:
+- **Python packages**: see `requirements.txt`. At minimum the project expects:
   - `torch`, `numpy`, `pandas`, `scikit-learn`, `matplotlib`, `shap`, `captum`, `fastapi`, `uvicorn`
-- **OS / Shell:**: Tested on Linux (zsh / bash). GPU support available if `torch.cuda.is_available()`.
+- **OS / Shell**: Tested on Linux (zsh / bash). GPU support available if `torch.cuda.is_available()`.
 
 **Quick Start — Local (virtualenv)**
 - **Install:**
@@ -67,7 +67,7 @@ curl "http://localhost:8000/predict?hour=12&minute=0&weekday=2&month=6"
 **Model Inputs & Normalization**
 - **Input features (8):**
   - `hour_sin`, `hour_cos`, `minute_sin`, `minute_cos`, `weekday_sin`, `weekday_cos`, `month_sin`, `month_cos`
-- **Normalization:**: training saves mean/std to `./models/normalization_stats.npz`. Predictions denormalize using these values.
+- **Normalization**: training saves mean/std to `./models/normalization_stats.npz`. Predictions denormalize using these values.
 
 **Docker**
 - **Build & run training / explain images (project Dockerfile):**
@@ -83,7 +83,7 @@ docker build -f Dockerfile.predictapi -t voltage_predictor_api:latest .
 # Run (mount models so the container can access model files)
 docker run --rm -p 8000:8000 -v "$(pwd)/models":/app/models voltage_predictor_api:latest
 ```
-- **docker-compose:**: The repository includes `docker-compose.yml` with services for `voltage-explain`, `voltage-model`, `voltage-model-probability` and `predictapi`. You can start profiles individually. Example:
+- **docker-compose**: The repository includes `docker-compose.yml` with services for `voltage-explain`, `voltage-model`, `voltage-model-probability` and `predictapi`. You can start profiles individually. Example:
 ```bash
 # run the API service (requires docker-compose v2+ profile support)
 docker compose --profile api up -d
@@ -99,9 +99,9 @@ docker compose --profile api up -d
   - `training_loss.png`, `training_loss_probability.png`, `integrated_gradients.csv`, `permutation_importance.png`, etc.
 
 **Development / Notes**
-- **Device:**: scripts auto-detect CUDA if available via `torch.cuda.is_available()` and use `DEVICE` accordingly.
-- **Data expectations:**: `models/history.csv` must contain at least two columns: `state` (numeric or numeric string) and `last_changed` (ISO timestamps). The training script filters unavailable or missing states, takes the minimum value per time window, and encodes cyclical time features.
-- **Extending features / lags:**: The code contains a `LAGS` variable support — adjust in training/predict scripts to include historical lag features. If you modify feature layout, keep model definitions consistent across training, predict and explain scripts.
+- **Device**: scripts auto-detect CUDA if available via `torch.cuda.is_available()` and use `DEVICE` accordingly.
+- **Data expectations**: `models/history.csv` must contain at least two columns: `state` (numeric or numeric string) and `last_changed` (ISO timestamps). The training script filters unavailable or missing states, takes the minimum value per time window, and encodes cyclical time features.
+- **Extending features / lags**: The code contains a `LAGS` variable support — adjust in training/predict scripts to include historical lag features. If you modify feature layout, keep model definitions consistent across training, predict and explain scripts.
 
 **Troubleshooting**
 - **Model not loaded in API:** Ensure `./models/time_value_model.pth` and `./models/normalization_stats.npz` exist and are readable by the process.
@@ -109,7 +109,7 @@ docker compose --profile api up -d
 - **Permission errors in Docker:** When mounting volumes, ensure file permissions allow the container user to read/write `./models`.
 
 **Training Results**
-- **Artifacts:**: See the `models/` folder for generated plots and artifacts. The most relevant plots are embedded below for quick review.
+- **Artifacts**: See the `models/` folder for generated plots and artifacts. The most relevant plots are embedded below for quick review.
 
 Regression model training loss:
 
@@ -128,8 +128,8 @@ SHAP summary (global feature impact):
 ![SHAP summary](models/shap_summary.png)
 
 - **Quick interpretation:**
-  - **Loss curves:**: The regression and probability `training_loss` plots show convergence behaviour. A steady drop in training loss with a similarly decreasing validation loss indicates good fit; a widening gap suggests overfitting.
-  - **Permutation importance:**: The permutation chart highlights which encoded time features increase MSE most when shuffled — useful to confirm which cyclic features carry predictive signal.
+  - **Loss curves**: The regression and probability `training_loss` plots show convergence behaviour. A steady drop in training loss with a similarly decreasing validation loss indicates good fit; a widening gap suggests overfitting.
+  - **Permutation importance**: The permutation chart highlights which encoded time features increase MSE most when shuffled — useful to confirm which cyclic features carry predictive signal.
 
 **Explainability Insights (SHAP & Integrated Gradients)**
 - **Available files:**
