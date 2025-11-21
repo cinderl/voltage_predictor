@@ -116,3 +116,55 @@ docker compose --profile api up -d
   - Add example client scripts for querying the API.
   - Add a small test to validate that model + stats files load before starting the API.
   - Add a minimal `Makefile` with common commands (`make install`, `make train`, `make api`).
+
+**Training Results**
+- **Artifacts:**: See the `models/` folder for generated plots and artifacts. The most relevant plots are embedded below for quick review.
+
+Regression model training loss:
+
+![Regression training loss](models/training_loss.png)
+
+Probability model training loss:
+
+![Probability training loss](models/training_loss_probability.png)
+
+Permutation feature importance (increase in MSE when a feature is shuffled):
+
+![Permutation importance](models/permutation_importance.png)
+
+SHAP summary (global feature impact):
+
+![SHAP summary](models/shap_summary.png)
+
+- **Quick interpretation:**
+  - **Loss curves:**: The regression and probability `training_loss` plots show convergence behaviour. A steady drop in training loss with a similarly decreasing validation loss indicates good fit; a widening gap suggests overfitting.
+  - **Permutation importance:**: The permutation chart highlights which encoded time features increase MSE most when shuffled — useful to confirm which cyclic features carry predictive signal.
+
+**Explainability Insights (SHAP & Integrated Gradients)**
+- **Available files:**
+  - `models/shap_summary.png` — SHAP summary plot (global feature importance / impact)
+  - `models/permutation_importance.png` — permutation importance bar chart
+  - `models/integrated_gradients.csv` — numeric mean absolute Integrated Gradients per feature
+
+- **Integrated Gradients (numeric)**: the project stores mean absolute IG attributions in `models/integrated_gradients.csv`. Ranked by importance (mean(|IG|)) the features are:
+  1. `hour_cos` — 0.47295
+  2. `hour_sin` — 0.25666
+  3. `month_cos` — 0.20562
+  4. `month_sin` — 0.08371
+  5. `minute_sin` — 0.06707
+  6. `weekday_sin` — 0.06391
+  7. `minute_cos` — 0.05766
+  8. `weekday_cos` — 0.03312
+
+- **What this suggests:**
+  - **Hourly signal dominates:** `hour_cos` and `hour_sin` together carry the largest attribution, indicating the model strongly relies on the hour-of-day cyclical pattern to predict the value.
+  - **Monthly seasonality matters:** `month_cos` / `month_sin` appear next in importance, implying a seasonal monthly effect in the data.
+  - **Minute & weekday are weaker:** minute and weekday encodings contribute less but are still non-zero, suggesting fine-grained and weekly patterns are present but weaker than hourly/monthly cycles.
+
+- **SHAP / permutation cross-check:**
+  - SHAP (`models/shap_summary.png`) and permutation importance (`models/permutation_importance.png`) provide complementary views: SHAP shows per-sample impact and direction, while permutation importance measures effect on global MSE. Use them together to validate feature importance and check for inconsistencies.
+
+**How to reproduce these plots**
+- **Training curves:** Re-run the training scripts — the code saves `training_loss.png` and `training_loss_probability.png` automatically.
+- **Integrated Gradients:** `python explain_model.py` computes IG (requires Captum) and writes `models/integrated_gradients.csv`.
+- **SHAP:** `python explain_model.py` will also attempt SHAP (if `shap` is installed) and write `models/shap_summary.png` and dependence plots.
