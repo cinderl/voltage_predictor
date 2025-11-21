@@ -1,0 +1,74 @@
+# version: '3.9'
+
+services:
+  voltage-explain:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: voltage-explain:latest
+    container_name: voltage-explain
+    profiles:
+      - explain
+    # Mount the models directory so the container can read/save model and outputs
+    volumes:
+      - ./models:/app/models
+    working_dir: /app
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: ["python", "explain_model.py"]
+    restart: "no"
+  voltage-model:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      # Map the current directory to /app in the container
+      - .:/app
+      # Create a named volume for persistent model storage
+      - ./models:/app/models
+    environment:
+      - PYTHONUNBUFFERED=1  # This ensures Python output is displayed in real-time
+    profiles:
+      - training
+  voltage-model-probability:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+      - ./models:/app/models
+    environment:
+      - PYTHONUNBUFFERED=1
+    profiles:
+      - training
+    command: ["python", "train_model_probability.py"]
+  predictapi:
+    build:
+      context: .
+      dockerfile: Dockerfile.predictapi
+    volumes:
+      # Map the current directory to /app in the container
+      - .:/app
+      # Create a named volume for persistent model storage
+      - ./models:/app/models
+    expose:
+      - "8000"
+    environment:
+      - PYTHONUNBUFFERED=1  # This ensures Python output is displayed in real-time
+    profiles:
+      - api
+    restart: unless-stopped
+    labels:
+      - "telegram-notifier.monitor=false"  # no monitor
+      - "traefik.enable=true"
+      - "traefik.http.services.predictapi.loadbalancer.server.port=8000"    
+      - "traefik.http.routers.predictapi.rule=Host(`predict.192.168.0.9.nip.io`)" 
+      - "traefik.http.routers.predictapi.entrypoints=websecure"
+      - "traefik.http.routers.predictapi.tls=true"  
+    networks:
+      networkpredict:
+        ipv4_address: 173.18.0.244         
+networks:
+  networkpredict:
+    name: home_network
+    external: true
